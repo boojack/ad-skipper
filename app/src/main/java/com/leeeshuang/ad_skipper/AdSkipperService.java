@@ -6,46 +6,33 @@ import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.leeeshuang.ad_skipper.service.DatabaseService;
 import com.leeeshuang.ad_skipper.utils.ToastUtil;
 
 public class AdSkipperService extends AccessibilityService {
     private static final String CLS_BTN_NAME = "android.widget.Button";
     private static final String CLS_TEXT_NAME = "android.widget.TextView";
-    private String blackPkgList = "";
-    private String[] skipKeyWordList;
-    private String lastLaunchedPkgName = "";
+
+    // 屏蔽间隔 5s
+    private static final int DURATION = 5000;
+    private long lastSkipAt = 0;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        // 数据存储相关
-//        SharedPreferences sharedPref = getSharedPreferences(getString(R.string.local_white_pkg_list), Context.MODE_PRIVATE);
-//        String defaultWhitePkgList = getResources().getString(R.string.local_white_pkg_list_default_value);
-//        String whitePkgList = sharedPref.getString("local_white_pkg_list", defaultWhitePkgList);
-//
-//        SharedPreferences.Editor editor = sharedPref.edit();
-//        editor.putString("local_white_pkg_list", whitePkgList);
-//        editor.apply();
+        ToastUtil.showToast(this, "服务已创建！");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        ToastUtil.showToast(this, "服务已摧毁！");
     }
 
     // 服务已连接
     @Override
     protected void onServiceConnected() {
         ToastUtil.showToast(this, "首屏广告跳过服务已开启！");
-
-        this.blackPkgList = getResources().getString(R.string.local_black_pkg_list);
-        String skipKeyWord = getResources().getString(R.string.skip_key_word);
-        this.skipKeyWordList = skipKeyWord.split(" ");
-
-        // 数据存储相关
-        // SharedPreferences sharedPref = getSharedPreferences("local_white_pkg_list", Context.MODE_PRIVATE);
-        // String defaultBlackPkgList = getResources().getString(R.string.local_black_pkg_list);
 
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         info.eventTypes = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED | AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
@@ -67,13 +54,11 @@ public class AdSkipperService extends AccessibilityService {
 
         String currentPkgName = String.valueOf(rootNode.getPackageName());
 
-//        if (currentPkgName.equals(this.lastLaunchedPkgName)) {
-//            return;
-//        } else {
-//            do nth
-//        }
+        if (!DatabaseService.blackPkgNames.contains(currentPkgName)) {
+            return;
+        }
 
-        if (!this.blackPkgList.contains(currentPkgName)) {
+        if (System.currentTimeMillis() < this.lastSkipAt + DURATION) {
             return;
         }
 
@@ -83,8 +68,9 @@ public class AdSkipperService extends AccessibilityService {
         AccessibilityNodeInfo adNode = findDisgustingAdNode(rootNode);
 
         if (adNode != null) {
-            this.lastLaunchedPkgName = currentPkgName;
             adNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            this.lastSkipAt = System.currentTimeMillis();
+            ToastUtil.showToast(this, "已跳过广告!");
         }
 
 //        final int eventType = event.getEventType();
@@ -98,12 +84,11 @@ public class AdSkipperService extends AccessibilityService {
 //        }
     }
 
-    // 递归查找包含跳过字样的Button/TextView
     private AccessibilityNodeInfo findDisgustingAdNode(AccessibilityNodeInfo node) {
         String text = String.valueOf(node.getText());
 
         if (!TextUtils.isEmpty(text) && (CLS_BTN_NAME.contentEquals(node.getClassName()) || CLS_TEXT_NAME.contentEquals(node.getClassName()))) {
-            for (String s : this.skipKeyWordList) {
+            for (String s : DatabaseService.skipKeyWords.split("/")) {
                 if (text.contains(s)) {
                     if (node.isClickable()) {
                         return node;
@@ -132,9 +117,8 @@ public class AdSkipperService extends AccessibilityService {
         return null;
     }
 
-    // 服务中断
     @Override
     public void onInterrupt() {
-        ToastUtil.showToast(this, "首屏广告跳过服务已关闭！");
+        ToastUtil.showToast(this, "首屏广告跳过服务已中断！");
     }
 }
