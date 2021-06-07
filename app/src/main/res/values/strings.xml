@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ad-skipper</string>
+    <string name="ad_skipper_service_description">Auto-skip the ad in Android app.</string>
+    <string name="local_black_pkg_list">com.zhihu.android com.taou.maimai com.baidu.tieba com.xingin.xhs com.qiyi.video tv.danmuku.bili com.duowan.kiwi</string>
+    <string name="skip_key_word">跳过 关闭 Skip</string>
+</resources>
