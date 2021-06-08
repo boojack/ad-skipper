@@ -86,5 +86,25 @@
             android:text="保存"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:onClick="handleSyncUpdateBtnClick"
+            android:text="同步更新" />
+
+        <Switch
+            android:id="@+id/serviceStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="服务状态"
+            android:textOff="OFF"
+            android:textOn="ON"
+            android:textSize="20sp"
+            android:visibility="invisible" />
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

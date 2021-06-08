@@ -9,13 +9,15 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.leeeshuang.ad_skipper.service.DatabaseService;
 import com.leeeshuang.ad_skipper.utils.ToastUtil;
 
+import java.util.Objects;
+
 public class AdSkipperService extends AccessibilityService {
     private static final String CLS_BTN_NAME = "android.widget.Button";
     private static final String CLS_TEXT_NAME = "android.widget.TextView";
 
-    // 屏蔽间隔 5s
-    private static final int DURATION = 5000;
-    private long lastSkipAt = 0;
+    private boolean isRunning = true;
+    private String currentPackageName = "";
+    private String currentActivityName = "";
 
     @Override
     public void onCreate() {
@@ -26,6 +28,7 @@ public class AdSkipperService extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        this.isRunning = false;
         ToastUtil.showToast(this, "服务已摧毁！");
     }
 
@@ -43,53 +46,88 @@ public class AdSkipperService extends AccessibilityService {
         this.setServiceInfo(info);
     }
 
-    // 接收事件
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (!this.isRunning) {
+            return;
+        }
+
+        if (event.getPackageName() == null || event.getClassName() == null) {
+            return;
+        }
+
+        final int eventType = event.getEventType();
+        String pkgName = event.getPackageName().toString();
+        String className = event.getClassName().toString();
+
+        if (!DatabaseService.blackPkgNames.contains(pkgName)) {
+            return;
+        }
+
+        if (!Objects.equals(DatabaseService.blackPkgNameMap.get(pkgName), "")) {
+            if (!Objects.equals(DatabaseService.blackPkgNameMap.get(pkgName), className)) {
+                return;
+            }
+        }
+
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            boolean isActivity = !className.startsWith("android.widget.") && !className.startsWith("android.view.");
+
+            if (isActivity) {
+                if (currentPackageName.equals(pkgName)) {
+                    if (!currentActivityName.equals(className)) {
+                        currentActivityName = className;
+                    }
+                } else {
+                    currentPackageName = pkgName;
+                    currentActivityName = className;
+
+                    skipAd();
+                }
+            }
+        } else if (eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            if (!pkgName.equals(currentPackageName)) {
+                return;
+            }
+
+            skipAd();
+        }
+    }
+
+    private void skipAd() {
         AccessibilityNodeInfo rootNode = this.getRootInActiveWindow();
 
         if (rootNode == null) {
             return;
         }
 
-        String currentPkgName = String.valueOf(rootNode.getPackageName());
-
-        if (!DatabaseService.blackPkgNames.contains(currentPkgName)) {
-            return;
-        }
-
-        if (System.currentTimeMillis() < this.lastSkipAt + DURATION) {
-            return;
-        }
-
-//        System.out.println("currentPkgName: " + currentPkgName);
-//        System.out.println("lastLaunchedPkgName: " + this.lastLaunchedPkgName);
-
         AccessibilityNodeInfo adNode = findDisgustingAdNode(rootNode);
 
         if (adNode != null) {
             adNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            this.lastSkipAt = System.currentTimeMillis();
             ToastUtil.showToast(this, "已跳过广告!");
+            DatabaseService.blackPkgNameMap.replace(currentPackageName, currentActivityName);
+            DatabaseService.updateBlackPkgNames();
         }
-
-//        final int eventType = event.getEventType();
-//
-//        if (eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-//
-//        } else if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-//            System.out.println("TYPE_WINDOW_STATE_CHANGED " + currentPkgName + "   " + this.lastLaunchedPkgName);
-//
-//            this.lastLaunchedPkgName = currentPkgName;
-//        }
     }
 
     private AccessibilityNodeInfo findDisgustingAdNode(AccessibilityNodeInfo node) {
-        String text = String.valueOf(node.getText());
+        CharSequence rawText = node.getText();
+        CharSequence rawDesc = node.getText();
 
-        if (!TextUtils.isEmpty(text) && (CLS_BTN_NAME.contentEquals(node.getClassName()) || CLS_TEXT_NAME.contentEquals(node.getClassName()))) {
+        if ((!TextUtils.isEmpty(rawText) || !TextUtils.isEmpty(rawDesc)) && (CLS_BTN_NAME.contentEquals(node.getClassName()) || CLS_TEXT_NAME.contentEquals(node.getClassName()))) {
+            String text = "";
+            if (rawText != null) {
+                text = rawText.toString();
+            }
+
+            String desc = "";
+            if (rawDesc != null) {
+                desc = rawDesc.toString();
+            }
+
             for (String s : DatabaseService.skipKeyWords.split("/")) {
-                if (text.contains(s)) {
+                if ((text.contains(s) && text.length() < 8) || (desc.contains(s) && desc.length() < 8)) {
                     if (node.isClickable()) {
                         return node;
                     } else {
