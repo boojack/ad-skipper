@@ -44,21 +44,40 @@
             android:background="?android:attr/listDivider" />
 
         <TextView
+            android:id="@+id/textView6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="黑名单的 App 们" />
+
+        <TextView
+            android:id="@+id/blackPkgNameList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp" />
+
+        <TextView
             android:id="@+id/textView3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="黑名单 App 的包名（中间用空格分开）" />
+            android:text="新增一个包名" />
 
         <EditText
-            android:id="@+id/blackPkgNames"
+            android:id="@+id/blackPkgNameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:height="128dp"
+            android:layout_marginBottom="8dp"
             android:ems="10"
             android:inputType="textMultiLine"
-            android:minHeight="128dp"
             android:textAlignment="viewStart" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:clickable="true"
+            android:onClick="handleInsertBlackPkgBtnClick"
+            android:text="新增" />
 
         <TextView
             android:id="@+id/textView4"
@@ -67,13 +86,11 @@
             android:text="按钮关键词（中间用 / 分开）" />
 
         <EditText
-            android:id="@+id/skipKeyWords"
+            android:id="@+id/skipKeyWordsInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:height="128dp"
             android:ems="10"
             android:inputType="textMultiLine"
-            android:minHeight="128dp"
             android:textAlignment="viewStart" />
 
         <Button
@@ -82,29 +99,10 @@
             android:layout_height="wrap_content"
             android:background="@color/teal_200"
             android:clickable="true"
-            android:onClick="handleSaveBtnClick"
+            android:onClick="handleSkipKeyWordSaveBtnClick"
             android:text="保存"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="parent" />
-
-        <Button
-            android:id="@+id/button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:onClick="handleSyncUpdateBtnClick"
-            android:text="同步更新" />
-
-        <Switch
-            android:id="@+id/serviceStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="服务状态"
-            android:textOff="OFF"
-            android:textOn="ON"
-            android:textSize="20sp"
-            android:visibility="invisible" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

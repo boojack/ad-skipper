@@ -23,8 +23,4 @@ public class Usage {
         this.pkgName = pkgName;
         this.lastSkippedAt = lastSkippedAt;
     }
-
-    public Usage clone() {
-        return new Usage(this.name, this.pkgName, this.lastSkippedAt);
-    }
 }

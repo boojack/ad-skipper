@@ -9,12 +9,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import com.leeeshuang.ad_skipper.service.DatabaseService;
 import com.leeeshuang.ad_skipper.utils.ToastUtil;
 
-import java.util.Objects;
-
 public class AdSkipperService extends AccessibilityService {
-    private static final String CLS_BTN_NAME = "android.widget.Button";
-    private static final String CLS_TEXT_NAME = "android.widget.TextView";
-
     private boolean isRunning = true;
     private String currentPackageName = "";
     private String currentActivityName = "";
@@ -49,6 +44,7 @@ public class AdSkipperService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (!this.isRunning) {
+            ToastUtil.showToast(this, "服务已停止！");
             return;
         }
 
@@ -64,33 +60,27 @@ public class AdSkipperService extends AccessibilityService {
             return;
         }
 
-        if (!Objects.equals(DatabaseService.blackPkgNameMap.get(pkgName), "")) {
-            if (!Objects.equals(DatabaseService.blackPkgNameMap.get(pkgName), className)) {
-                return;
-            }
+        boolean isActivity = !className.startsWith("android.widget.") && !className.startsWith("android.view.");
+
+        if (isActivity) {
+            return;
         }
 
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            boolean isActivity = !className.startsWith("android.widget.") && !className.startsWith("android.view.");
-
-            if (isActivity) {
-                if (currentPackageName.equals(pkgName)) {
-                    if (!currentActivityName.equals(className)) {
-                        currentActivityName = className;
-                    }
-                } else {
-                    currentPackageName = pkgName;
+            if (currentPackageName.equals(pkgName)) {
+                if (!currentActivityName.equals(className)) {
                     currentActivityName = className;
-
-                    skipAd();
                 }
+            } else {
+                currentPackageName = pkgName;
+                currentActivityName = className;
+
+                skipAd();
             }
         } else if (eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-            if (!pkgName.equals(currentPackageName)) {
-                return;
+            if (pkgName.equals(currentPackageName)) {
+                skipAd();
             }
-
-            skipAd();
         }
     }
 
@@ -106,8 +96,6 @@ public class AdSkipperService extends AccessibilityService {
         if (adNode != null) {
             adNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             ToastUtil.showToast(this, "已跳过广告!");
-            DatabaseService.blackPkgNameMap.replace(currentPackageName, currentActivityName);
-            DatabaseService.updateBlackPkgNames();
         }
     }
 
@@ -115,7 +103,7 @@ public class AdSkipperService extends AccessibilityService {
         CharSequence rawText = node.getText();
         CharSequence rawDesc = node.getText();
 
-        if ((!TextUtils.isEmpty(rawText) || !TextUtils.isEmpty(rawDesc)) && (CLS_BTN_NAME.contentEquals(node.getClassName()) || CLS_TEXT_NAME.contentEquals(node.getClassName()))) {
+        if ((!TextUtils.isEmpty(rawText) || !TextUtils.isEmpty(rawDesc))) {
             String text = "";
             if (rawText != null) {
                 text = rawText.toString();
