@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        preferences = getSharedPreferences("setting", Context.MODE_PRIVATE);
         initData();
         DatabaseService.create(this);
     }
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         String blackPkgNames = blackPkgNamesEt.getText().toString();
 
         if (!TextUtils.isEmpty(blackPkgNames) && !DatabaseService.blackPkgNames.contains(blackPkgNames)) {
-            DatabaseService.blackPkgNames = DatabaseService.blackPkgNames + blackPkgNames;
+            DatabaseService.blackPkgNames = DatabaseService.blackPkgNames + " " + blackPkgNames.trim();
             // 保存键值对
             @SuppressLint("CommitPrefEdits")
             SharedPreferences.Editor editor = preferences.edit();
@@ -57,10 +58,30 @@ public class MainActivity extends AppCompatActivity {
             TextView blackPkgNamesTv = findViewById(R.id.blackPkgNameList);
             blackPkgNamesTv.setText(String.join("\n", DatabaseService.blackPkgNames.split(" ")));
         }
+        blackPkgNamesEt.setText("");
+    }
+
+    public void handleResetBtnClick(View view) {
+        String blackPkgNames = getResources().getString(R.string.local_black_pkg_list);
+        String skipKeyWords = getResources().getString(R.string.skip_key_word);
+        DatabaseService.blackPkgNames = blackPkgNames;
+        DatabaseService.skipKeyWords = skipKeyWords;
+
+        // 保存键值对
+        @SuppressLint("CommitPrefEdits")
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(blackPkgNameKey, DatabaseService.blackPkgNames);
+        editor.putString(skipKeyWordKey, DatabaseService.skipKeyWords);
+        editor.apply();
+        ToastUtil.showToast(this, "重置成功!");
+
+        TextView blackPkgNamesTv = findViewById(R.id.blackPkgNameList);
+        EditText skipKeyWordsEt = findViewById(R.id.skipKeyWordsInput);
+        blackPkgNamesTv.setText(String.join("\n", blackPkgNames.split(" ")));
+        skipKeyWordsEt.setText(skipKeyWords);
     }
 
     private void initData() {
-        preferences = getSharedPreferences("setting", Context.MODE_PRIVATE);
         String blackPkgNames = preferences.getString(blackPkgNameKey, getResources().getString(R.string.local_black_pkg_list));
         String skipKeyWords = preferences.getString(skipKeyWordKey, getResources().getString(R.string.skip_key_word));
         DatabaseService.blackPkgNames = blackPkgNames;

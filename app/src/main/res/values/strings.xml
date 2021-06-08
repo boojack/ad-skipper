@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">ad-skipper</string>
     <string name="ad_skipper_service_description">Auto-skip the ad in Android app.</string>
-    <string name="local_black_pkg_list">com.zhihu.android com.taou.maimai com.baidu.tieba com.xingin.xhs com.qiyi.video tv.danmuku.bili com.duowan.kiwi</string>
+    <string name="local_black_pkg_list">com.zhihu.android com.taou.maimai com.baidu.tieba tv.danmuku.bili</string>
     <string name="skip_key_word">跳过/关闭/Skip</string>
+    <string name="usage_guide_text">1. 确保打开了”无障碍服务“权限；2. 将需要跳过广告的应用包名手动加入黑名单（如何知道包名请自行百度）；</string>
 </resources>
