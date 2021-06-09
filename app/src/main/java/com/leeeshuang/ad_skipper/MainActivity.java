@@ -18,6 +18,7 @@ import com.leeeshuang.ad_skipper.utils.ToastUtil;
 public class MainActivity extends AppCompatActivity {
     public static final String blackPkgNameKey = "local_black_pkg_names";
     public static final String skipKeyWordKey = "skip_key_words";
+    public static final String showSkipTipKey = "show_skip_tip";
     public static SharedPreferences preferences;
 
     @Override
@@ -91,13 +92,17 @@ public class MainActivity extends AppCompatActivity {
     private void initData() {
         String blackPkgNames = preferences.getString(blackPkgNameKey, getResources().getString(R.string.local_black_pkg_list));
         String skipKeyWords = preferences.getString(skipKeyWordKey, getResources().getString(R.string.skip_key_word));
+        boolean showSkipTip = preferences.getBoolean(showSkipTipKey, true);
         DatabaseService.blackPkgNames = blackPkgNames;
         DatabaseService.skipKeyWords = skipKeyWords;
 
         TextView blackPkgNamesTv = findViewById(R.id.blackPkgNameList);
         EditText skipKeyWordsEt = findViewById(R.id.skipKeyWordsInput);
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        Switch showSkipTipSwitch = findViewById(R.id.showSkipTipSwitch);
         blackPkgNamesTv.setText(String.join("\n", blackPkgNames.split(" ")));
         skipKeyWordsEt.setText(skipKeyWords);
+        showSkipTipSwitch.setChecked(showSkipTip);
     }
 
     private void initListeners() {
@@ -106,7 +111,11 @@ public class MainActivity extends AppCompatActivity {
 
         showSkipTipSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             DatabaseService.showSkipTip = isChecked;
-            System.out.println(isChecked);
+            // 保存键值对
+            @SuppressLint("CommitPrefEdits")
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putBoolean(showSkipTipKey, DatabaseService.showSkipTip);
+            editor.apply();
         });
     }
 }
