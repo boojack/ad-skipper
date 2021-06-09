@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,8 +26,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         preferences = getSharedPreferences("setting", Context.MODE_PRIVATE);
         initData();
+        initListeners();
         DatabaseService.create(this);
     }
+
 
     public void handleSkipKeyWordSaveBtnClick(View view) {
         EditText skipKeyWordsEt = findViewById(R.id.skipKeyWordsInput);
@@ -66,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         String skipKeyWords = getResources().getString(R.string.skip_key_word);
         DatabaseService.blackPkgNames = blackPkgNames;
         DatabaseService.skipKeyWords = skipKeyWords;
+        DatabaseService.showSkipTip = true;
 
         // 保存键值对
         @SuppressLint("CommitPrefEdits")
@@ -77,8 +81,11 @@ public class MainActivity extends AppCompatActivity {
 
         TextView blackPkgNamesTv = findViewById(R.id.blackPkgNameList);
         EditText skipKeyWordsEt = findViewById(R.id.skipKeyWordsInput);
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        Switch showSkipTipSwitch = findViewById(R.id.showSkipTipSwitch);
         blackPkgNamesTv.setText(String.join("\n", blackPkgNames.split(" ")));
         skipKeyWordsEt.setText(skipKeyWords);
+        showSkipTipSwitch.setChecked(true);
     }
 
     private void initData() {
@@ -91,5 +98,15 @@ public class MainActivity extends AppCompatActivity {
         EditText skipKeyWordsEt = findViewById(R.id.skipKeyWordsInput);
         blackPkgNamesTv.setText(String.join("\n", blackPkgNames.split(" ")));
         skipKeyWordsEt.setText(skipKeyWords);
+    }
+
+    private void initListeners() {
+        @SuppressLint("UseSwitchCompatOrMaterialCode")
+        Switch showSkipTipSwitch = findViewById(R.id.showSkipTipSwitch);
+
+        showSkipTipSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            DatabaseService.showSkipTip = isChecked;
+            System.out.println(isChecked);
+        });
     }
 }

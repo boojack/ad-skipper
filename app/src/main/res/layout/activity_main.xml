@@ -112,6 +112,15 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+        <Switch
+            android:id="@+id/showSkipTipSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:checked="true"
+            android:text="显示跳过成功提示"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
+
         <TextView
             android:id="@+id/textView8"
             android:layout_width="match_parent"
@@ -131,7 +140,7 @@
             android:layout_height="wrap_content"
             android:clickable="true"
             android:onClick="handleResetBtnClick"
-            android:text="重置" />
+            android:text="重置配置" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

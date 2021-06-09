@@ -10,7 +10,6 @@ import com.leeeshuang.ad_skipper.service.DatabaseService;
 import com.leeeshuang.ad_skipper.utils.ToastUtil;
 
 public class AdSkipperService extends AccessibilityService {
-    private boolean isRunning = true;
     private String currentPackageName = "";
     private String currentActivityName = "";
 
@@ -23,7 +22,6 @@ public class AdSkipperService extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        this.isRunning = false;
         ToastUtil.showToast(this, "服务已摧毁！");
     }
 
@@ -43,16 +41,10 @@ public class AdSkipperService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (!this.isRunning) {
-            ToastUtil.showToast(this, "服务已停止！");
-            return;
-        }
-
         if (event.getPackageName() == null || event.getClassName() == null) {
             return;
         }
 
-        final int eventType = event.getEventType();
         String pkgName = event.getPackageName().toString();
         String className = event.getClassName().toString();
 
@@ -60,11 +52,13 @@ public class AdSkipperService extends AccessibilityService {
             return;
         }
 
-        boolean isActivity = !className.startsWith("android.widget.") && !className.startsWith("android.view.");
+        boolean isPossibleTarget = className.contains("android.widget.") || className.contains("android.view.");
 
-        if (isActivity) {
+        if (!isPossibleTarget) {
             return;
         }
+
+        final int eventType = event.getEventType();
 
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             if (currentPackageName.equals(pkgName)) {
@@ -95,15 +89,18 @@ public class AdSkipperService extends AccessibilityService {
 
         if (adNode != null) {
             adNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            ToastUtil.showToast(this, "已跳过广告!");
+
+            if (DatabaseService.showSkipTip) {
+                ToastUtil.showToast(this, "已跳过广告!");
+            }
         }
     }
 
     private AccessibilityNodeInfo findDisgustingAdNode(AccessibilityNodeInfo node) {
         CharSequence rawText = node.getText();
-        CharSequence rawDesc = node.getText();
+        CharSequence rawDesc = node.getContentDescription();
 
-        if ((!TextUtils.isEmpty(rawText) || !TextUtils.isEmpty(rawDesc))) {
+        if (!TextUtils.isEmpty(rawText) || !TextUtils.isEmpty(rawDesc)) {
             String text = "";
             if (rawText != null) {
                 text = rawText.toString();

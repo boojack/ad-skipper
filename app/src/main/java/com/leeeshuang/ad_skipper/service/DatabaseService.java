@@ -8,6 +8,7 @@ public class DatabaseService {
     public static AppDatabase db;
     public static String blackPkgNames;
     public static String skipKeyWords;
+    public static boolean showSkipTip = true;
 
     public static void create(final Context context) {
         db = Room.databaseBuilder(
